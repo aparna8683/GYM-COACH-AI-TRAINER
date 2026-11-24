@@ -94,7 +94,7 @@ class LungesDetector(BaseExercise):
             "reps":self.reps,
             "front_knee_angle": int(front_knee_angle),
             "torso_angle": int(torso_angle),
-            "balance_status" balance_status
+            "balance_status":balance_status
 
         }
 
