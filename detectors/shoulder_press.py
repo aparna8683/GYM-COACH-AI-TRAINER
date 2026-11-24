@@ -1,6 +1,6 @@
 from core.base_exercise import BaseExercise
 
-class ShoulderPressDetectorClass(BaseClass):
+class ShoulderPressDetectorClass(BaseExercise):
     UP_THRESHOLD = 160
     DOWN_THRESHOLD = 90
     MIN_VISIBILITY = 0.7
@@ -100,7 +100,9 @@ class ShoulderPressDetectorClass(BaseClass):
         return {
             "reps": self.reps ,
             "elbow_angle":int(elbow_angle),
-            "back_angle":int(back_angle)
+            "back_angle":int(back_angle),
+            "extension_status": extension_status,
+            "back_arch_status": back_arch_status
         }
 
 

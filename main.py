@@ -6,6 +6,16 @@ from services.persistence.exercise_repository import init_db
 from services.vision.exercise_video_processor import VideoProcessorClass
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 
+EXERCISE_MAPPING = {
+    "Squats": "Squats",
+    "Push-ups": "Push_ups",
+    "Biceps Curls (Dumbells)": "Bicep Curls",
+    "Shoulder Press": "Shoulder Press",
+    "Lunges": "Lunges"
+}
+
+
+
 def main():
     st.set_page_config(
         page_title="AI Real-time GYM Coach",

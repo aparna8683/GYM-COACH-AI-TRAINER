@@ -67,6 +67,14 @@ class SquatDetector(BaseExercise):
             ankle_idx = self.RIGHT_ANKLE
             shoulder_idx = self.RIGHT_SHOULDER
 
+        # print("LEFT KNEE ANGLE:", left_knee_angle)
+        # print("RIGHT KNEE ANGLE:", right_knee_angle)
+        # print("SELECTED KNEE ANGLE:", knee_angle)
+
+        # print("LEFT VISIBILITY:", left_vis)
+        # print("RIGHT VISIBILITY:", right_vis)
+        # print("CURRENT STAGE:", self.stage)
+
         # 5. Calculate hip joint angle
         back_angle = self.calculate_angle(
             self.get_point(landmarks, shoulder_idx),
@@ -81,6 +89,7 @@ class SquatDetector(BaseExercise):
             and landmarks[ankle_idx].visibility >= self.MIN_VISIBILITY
             and landmarks[shoulder_idx].visibility >= self.MIN_VISIBILITY
         )
+        # print("KEY LANDMARKS VISIBLE:", key_landmark_visible)
 
         # 7. Detect squat movement
         if key_landmark_visible:

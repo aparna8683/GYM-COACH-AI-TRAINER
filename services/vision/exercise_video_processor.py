@@ -22,9 +22,19 @@ class VideoProcessorClass(VideoProcessorBase):
         self._lock = threading.Lock()
         self._latest_metrics = None
         self._exercise_type = "Squats"
+        self._frame_count = 0
+        BASE_DIR = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..")
+        )
 
-        model_path = os.path.join(os.getcwd(), "ml_models", "pose_landmarker_full.task")
-        base_option = python.BaseOptions(model_path = model_path)
+        model_path = os.path.join(
+            BASE_DIR,
+            "ml_models",
+            "pose_landmarker_full.task"
+        )
+
+        # model_path = os.path.join(os.getcwd(), "ml_models", "pose_landmarker_full.task")
+        base_option = python.BaseOptions(model_asset_path = model_path)
 
         options = vision.PoseLandmarkerOptions(
             base_options = base_option,
@@ -176,7 +186,7 @@ class VideoProcessorClass(VideoProcessorBase):
 
         cv2.putText(
             img,
-            f"EXT: {metrics['body_alignment']} | BACK: {metrics['back_arch_status']}",
+            f"EXT: {metrics['extension_status']} | BACK: {metrics['back_arch_status']}",
             (20 , h - 20),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
@@ -199,49 +209,161 @@ class VideoProcessorClass(VideoProcessorBase):
         )
         
 
+    # def recv(self, frame):
+    #     image = np.asarray(
+    #         cv2.flip(frame.to_ndarray(format="bgr24"), 1),
+    #         dtype=np.uint8
+    #     )
+
+    #     mp_image = mp.Image(
+    #         image_format=mp.ImageFormat.SRGB,
+    #         data=cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+
+    #     )
+
+    #     self._frame_timestamps_ms +=30
+    #     result = self._landmarker.detect_for_video(mp_image, self._frame_timestamps_ms)
+
+
+    #     # //FOR DEBUGH//
+    #     if result.pose_landmarks:
+
+    #         landmarks = result.pose_landmarks[0]
+
+    #         visible_count = sum(
+    #             1 for lm in landmarks
+    #             if lm.visibility > 0.7
+    #         )
+
+    #         cv2.putText(
+    #             image,
+    #             f"POSE DETECTED: {visible_count}/33",
+    #             (20, 40),
+    #             cv2.FONT_HERSHEY_SIMPLEX,
+    #             0.8,
+    #             (0, 255, 0),
+    #             2
+    #         )
+
+    #     else:
+
+    #         cv2.putText(
+    #             image,
+    #             "NO POSE DETECTED",
+    #             (20, 40),
+    #             cv2.FONT_HERSHEY_SIMPLEX,
+    #             0.8,
+    #             (0, 0, 255),
+    #              2
+    #         )
+
+
+
+    #     if result.pose_landmarks:
+    #         landmarks = result.pose_landmarks[0]
+    #         self._draw_skeleton(image, landmarks)
+    #         ex_type = self.get_exercise()
+
+    #         detector = self._detector.get(ex_type)
+
+    #         if detector:
+    #             metrics = detector.process(landmarks)
+    #             if metrics is not None:
+    #                 self._draw_overlays(image, metrics, ex_type)
+    #                 self.set_latest_metrics(metrics)
+
+
+
+                
+
+        # else:
+        #     self._draw_no_pose_warnings(image)
+
+        # return av.VideoFrame.from_ndarray(image, format="bgr24")
+    
+    
+    
+    
     def recv(self, frame):
-        image = np.asarray(
-            cv2.flip(frame.to_ndarray(format="bgr24"), 1),
-            dtype=np.uint8
+
+        image = frame.to_ndarray(format="bgr24")
+        image = cv2.flip(image, 1)
+
+        self._frame_count += 1
+
+        rgb_image = cv2.cvtColor(
+            image,
+            cv2.COLOR_BGR2RGB
         )
 
         mp_image = mp.Image(
             image_format=mp.ImageFormat.SRGB,
-            data=cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-
+            data=rgb_image
         )
 
-        self._frame_timestamps_ms +=30
-        result = self._landmarker.detect_for_video(mp_image, self._frame_timestamps_ms)
+        self._frame_timestamps_ms += 33
+
+        result = self._landmarker.detect_for_video(
+            mp_image,
+            self._frame_timestamps_ms
+        )
+
+        cv2.putText(
+            image,
+            f"FRAME: {self._frame_count}",
+            (20, 40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.8,
+            (255, 0, 0),
+            2
+        )
 
         if result.pose_landmarks:
-            landmarks = result.pose_landmarks[0]
-            self._draw_skeleton(image, landmarks)
-            ex_type = self.get_exercise()
 
+            landmarks = result.pose_landmarks[0]
+
+            self._draw_skeleton(image, landmarks)
+
+            ex_type = self.get_exercise()
             detector = self._detector.get(ex_type)
 
             if detector:
-                metrics = detector.process(landmarks)
-                self._draw_overlays(image, metrics, ex_type)
 
-                self.set_latest_metrics(metrics)
+                try:
+                    metrics = detector.process(landmarks)
+
+                    if metrics is not None:
+
+                        self._draw_overlays(
+                            image,
+                            metrics,
+                            ex_type
+                        )
+
+                        self.set_latest_metrics(metrics)
+
+                except Exception as e:
+
+                    import traceback
+
+                    traceback.print_exc()
+
+                    cv2.putText(
+                        image,
+                        "DETECTOR ERROR - CHECK TERMINAL",
+                        (20, 80),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6,
+                        (0, 0, 255),
+                        2
+                    )
 
         else:
+
             self._draw_no_pose_warnings(image)
 
-        return av.VideoFrame.from_ndarray(image, format="bgr24")
-
-
-    
-
-
-
-
-
-
-
-    
-
-
+        return av.VideoFrame.from_ndarray(
+            image,
+            format="bgr24"
+        )
