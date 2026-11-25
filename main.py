@@ -5,6 +5,10 @@ from services.config.workout_config import EXERCISES_OPTIONS
 from services.persistence.exercise_repository import init_db
 from services.vision.exercise_video_processor import VideoProcessorClass
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
+import time 
+from services.tracking.metrics import sync_metrics_update
+
+
 
 EXERCISE_MAPPING = {
     "Squats": "Squats",
@@ -53,38 +57,51 @@ def main():
         st.subheader("Workout plan")
 
         if not workout_started:
-            st.selectbox("Exercise", options=EXERCISES_OPTIONS, key ="plan_exercise")
+            plan_exercise = st.selectbox("Exercise", options=EXERCISES_OPTIONS, key ="plan_exercise")
             
-            st.number_input("Sets", min_value = 0, max_value = 50, key = "plan_sets", step=1)
-            st.number_input("Reps per set", min_value = 0, max_value = 50, key = "plan_reps", step =1)
+            plan_sets = st.number_input("Sets", min_value = 0, max_value = 50, key = "plan_sets", step=1)
+
+            plan_reps = st.number_input("Reps per set", min_value = 0, max_value = 50, key = "plan_reps", step =1)
             st.markdown("")
             start_session_button = st.button("Start Session", width="stretch", key = "start_session_button")
+
             if start_session_button:
-                st.session_state["workout_started"]=True
+                st.session_state.exercise_type = plan_exercise
+                st.session_state.target_sets = int(plan_sets)
+                st.session_state.reps_per_set = int(plan_reps)
+                st.session_state.reps = 0
+                st.session_state.workout_started = True
+                st.session_state.set_cycle_started_at = time.time()
+                st.session_state.last_saved_sets_completed = 0
+                st.session_state.last_notified_sets_completed = 0
+                st.session_state.last_notified_workout_complete = False
+
                 st.rerun()
+                # st.session_state["workout_started"]=True
+                # st.rerun()
         else:
             st.write("Workout Started")
-            exercise = st.session_state.get("plan_exercise")
-            sets = st.session_state.get("plan_sets")
-            reps = st.session_state.get("plan_reps")
+            exercise = st.session_state.get("exercise_type")
+            sets = st.session_state.get("target_sets")
+            reps = st.session_state.get("reps_per_set")
 
             # print(exercise, sets, reps)
 
             st.info(f" **{exercise}** --{sets} Sets /{reps} Reps ")
             end_session_button = st.button("End Session", key = "end_session_button")
             if end_session_button:
-                st.session_state["workout_started"] = False
+                st.session_state.workout_started = False
                 st.rerun()
 
             if workout_started:
                 st.divider()
 
-                exercise = st.session_state.get("plan_exercise")
+                exercise = st.session_state.get("exercise_type")
                 total_reps = st.session_state.get("reps")
                 current_set_reps = st.session_state.get("current_set_reps")
-                reps_per_set = st.session_state.get("plan_reps")
+                reps_per_set = st.session_state.get("reps_per_set")
                 sets_completed= st.session_state.get("sets_completed")
-                target_sets = st.session_state.get("plan_sets")
+                target_sets = st.session_state.get("target_sets")
                 
                 st.subheader("Progress")
 
@@ -159,6 +176,13 @@ def main():
                 },
                 async_processing =True
             )
+            sync_metrics_update(context)
+
+            if context.state.playing:
+                time.sleep(0.25)
+                st.rerun()
+
+                
     st.markdown(" #### Workout History")
 
 
