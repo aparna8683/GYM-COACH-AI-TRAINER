@@ -6,7 +6,9 @@ from services.persistence.exercise_repository import init_db
 from services.vision.exercise_video_processor import VideoProcessorClass
 from streamlit_webrtc import webrtc_streamer, WebRtcMode
 import time 
+import pandas as pd
 from services.tracking.metrics import sync_metrics_update
+from services.persistence.exercise_repository import get_user_exercises
 
 
 
@@ -182,8 +184,50 @@ def main():
                 time.sleep(0.25)
                 st.rerun()
 
+    st.divider()
+
+
                 
     st.markdown(" #### Workout History")
+
+    user_id = st.session_state.get("user_id", 0)
+    if user_id !=0 :
+        history_rows = get_user_exercises(user_id)
+
+        arr = [
+
+            {
+                "Exercise": row['exercise_name'],
+                "Reps": row['reps'],
+                "Sets": row['sets'],
+                "Time(sec)":row['time'],
+                "Date":row['created_at']
+
+            }
+            for row in history_rows
+
+
+        ]
+
+        df = pd.DataFrame(arr)
+        if not df.empty:
+            df["Date"] = pd.to_datetime(df["Date"]).dt.date
+            agg_df = df.groupby(["Exercise", "Date"]).agg({
+                "Reps":'sum',
+                "Sets": 'sum',
+                "Time(sec)":"sum"
+            }).reset_index()
+            agg_df.index += 1
+
+            st.table(agg_df , border="horizontal")
+        else:
+            st.info("No workout history found")
+
+
+
+
+    
+
 
 
 
