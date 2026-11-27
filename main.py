@@ -9,7 +9,7 @@ from services.state.session_default import initial_session_defaults
 from services.config.workout_config import EXERCISES_OPTIONS
 from services.persistence.exercise_repository import init_db
 from services.vision.exercise_video_processor import VideoProcessorClass
-from streamlit_webrtc import webrtc_streamer, WebRtcMode
+from streamlit_webrtc import (webrtc_streamer, WebRtcMode, VideoProcessorBase)
 import time 
 import pandas as pd
 from services.tracking.metrics import sync_metrics_update
