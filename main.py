@@ -17,6 +17,10 @@ from services.persistence.exercise_repository import get_user_exercises
 
 from services.coaching.voice_pipeline import VoicePipeline, autoplay_audio
 
+class CameraTestProcessor:
+    def recv(self, frame):
+        return frame
+
 EXERCISE_MAPPING = {
     "Squats": "Squats",
     "Push-ups": "Push_ups",
@@ -223,7 +227,7 @@ def main():
             context = webrtc_streamer(
                 key="exercise-analysis",
                 mode=WebRtcMode.SENDRECV,
-                video_processor_factory=VideoProcessorClass,
+                video_processor_factory=CameraTestProcessor,
                 rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
                 media_stream_constraints={
                     "video":True,
@@ -231,6 +235,9 @@ def main():
                 },
                 async_processing =True
             )
+            st.write("WebRTC playing:", context.state.playing)
+            st.write("WebRTC state:", context.state)
+
             sync_metrics_update(context)
 
             if context.state.playing:
