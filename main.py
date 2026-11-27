@@ -17,7 +17,7 @@ from services.persistence.exercise_repository import get_user_exercises
 
 from services.coaching.voice_pipeline import VoicePipeline, autoplay_audio
 
-class CameraTestProcessor:
+class CameraTestProcessor(VideoProcessorBase):
     def recv(self, frame):
         return frame
 
@@ -235,14 +235,16 @@ def main():
                 },
                 async_processing =True
             )
+            st.write("Camera Test Mode")
+
             st.write("WebRTC playing:", context.state.playing)
             st.write("WebRTC state:", context.state)
 
-            sync_metrics_update(context)
+            # sync_metrics_update(context)
 
-            if context.state.playing:
-                time.sleep(0.25)
-                st.rerun()
+            # if context.state.playing:
+            #     time.sleep(0.25)
+            #     # st.rerun()
 
     st.divider()
 
