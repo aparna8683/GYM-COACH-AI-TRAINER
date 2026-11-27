@@ -33,7 +33,6 @@ class VideoProcessorClass(VideoProcessorBase):
             "pose_landmarker_full.task"
         )
 
-        # model_path = os.path.join(os.getcwd(), "ml_models", "pose_landmarker_full.task")
         base_option = python.BaseOptions(model_asset_path = model_path)
 
         options = vision.PoseLandmarkerOptions(
@@ -106,7 +105,7 @@ class VideoProcessorClass(VideoProcessorBase):
     def _draw_no_pose_warnings(self, img):
         cv2.putText(
             img,
-            "NO POSE DETECTRED",
+            "NO POSE DETECTED",
             (30, 50),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
@@ -333,6 +332,8 @@ class VideoProcessorClass(VideoProcessorBase):
                 try:
                     metrics = detector.process(landmarks)
 
+                    metrics["pose_detected"] = True
+
                     if metrics is not None:
 
                         self._draw_overlays(
@@ -362,6 +363,13 @@ class VideoProcessorClass(VideoProcessorBase):
         else:
 
             self._draw_no_pose_warnings(image)
+
+            with self._lock:
+                if self._latest_metrics is not None:
+                    self._latest_metrics["pose_detected"]=False
+
+                else:
+                    self._latest_metrics = {"pose_detected": False}
 
         return av.VideoFrame.from_ndarray(
             image,

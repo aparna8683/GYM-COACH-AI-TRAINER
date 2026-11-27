@@ -6,3 +6,6 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+# Sensitive files
+.streamlit/secrets.toml
+tts_test.mp3
