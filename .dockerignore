@@ -1,0 +1,11 @@
+
+.venv/
+venv/
+__pycache__/
+*.pyc
+.git/
+.env
+.env.*
+.streamlit/secrets.toml
+data.db
+tts_test.mp3
